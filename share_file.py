@@ -1,7 +1,7 @@
 import socket
 import os
 import sys
-from network_utils import send_json, receive_msg, recv_json
+from network_utils import send_json, receive_msg, receive_json_from
 
 CHUNK_SIZE = 1024 * 1024
 TRACKER_ADDR = ('127.0.0.1', 6000)
