@@ -74,6 +74,10 @@ def register_with_tracker(file_name, total_chunks, chunk_locations):
 
 #CHUNK upload logic
 def upload_file(file_path):
+    #Lists the peers
+    #Breaks the files into chunks
+    #Describe chunks to peers then reigster and upload using the tracker
+
     file_name = os.path.basename(file_path)
     chunk_locations = {}
     peers = get_peers_from_tracker()
