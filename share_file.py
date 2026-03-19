@@ -12,7 +12,7 @@ def get_peers_from_tracker():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect(TRACKER_ADDR)
         send_json(s, {"type": "GET_PEERS"})
-        response = recv_json(s)
+        response = receive_json_from(s)
         return response.get("peers", [])
 
 
