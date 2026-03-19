@@ -1,10 +1,14 @@
 # Computer-Networking-Proj1
-- File type: mp4 or mp3 , TCP is the better option here to ensure integrity for connections
 
-1. File chunking:
-    - File to binary to small chunks
-        - some sort of chunk identifier
-    - Notify the recieving end that data is about to be sent before any transferring 
+Upload a file, distribute chunks to peers, and reconstruct the file.
 
-2. Chunk distribution (network level)
-    - P2P tracker
+Usage:
+
+1. python tracker.py
+2. python peer.py 0
+3. python peer.py 1
+4. ... (arbitrary number of peers, >2)
+5. python share_file.py path/to/file
+6. python download_file.py filename
+
+Downloaded files appear in "client_downloads" folder created by the program.
