@@ -1,38 +1,11 @@
 import socket
-import json
-import struct
 import os
 import sys
+from network_utils import send_json, receive_json_from, receive_bytes_from
 
 TRACKER_ADDR = ('127.0.0.1', 6000)
 OUTPUT_DIR = "client_downloads"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-# Send JSON with length info
-def send_json(sock, data):
-    encoded = json.dumps(data).encode('utf-8')
-    sock.sendall(struct.pack('!I', len(encoded)))
-    sock.sendall(encoded)
-
-# Receive a specified number of bytes from the socket
-def receive_bytes_from(sock, size):
-    data = b''
-    while len(data) < size:
-        packet = sock.recv(size - len(data))
-        if not packet:
-            return None
-        data += packet
-    return data
-
-# Receive JSON with length info
-def receive_json_from(sock):
-    raw_length = receive_bytes_from(sock, 4)
-    if not raw_length:
-        return None
-    message_length = struct.unpack('!I', raw_length)[0]
-    data = receive_bytes_from(sock, message_length)
-    return json.loads(data.decode('utf-8'))
-
 
 # Download a single chunk from a specified peer
 def download_chunk(peer_ip, peer_port, file_name, chunk_index, size):

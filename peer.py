@@ -1,8 +1,7 @@
 import socket
-import json
-import struct
 import os
 import sys
+from network_utils import send_json, receive_json_from, receive_bytes_from
 
 if len(sys.argv) != 2:
     print("Usage: python peer.py (peer #)")
@@ -14,26 +13,6 @@ HOST = '0.0.0.0'
 STORAGE_DIRECTORY = "peer_storage"
 
 os.makedirs(STORAGE_DIRECTORY, exist_ok=True)
-
-# Receive exact num bytes
-def receive_bytes_from(sock, size):
-    data = b''
-    while len(data) < size:
-        packet = sock.recv(size - len(data))
-        if not packet:
-            return None
-        data += packet
-    return data
-
-# Receive JSON with length info
-def receive_json_from(sock):
-    raw_length = receive_bytes_from(sock, 4)
-    if not raw_length:
-        return None
-    # unpack message and return the decoded dict
-    message_length = struct.unpack('!I', raw_length)[0]
-    data = receive_bytes_from(sock, message_length)
-    return json.loads(data.decode('utf-8'))
 
 # Handle client messages
 def handle_client(conn, addr):
@@ -55,7 +34,7 @@ def handle_client(conn, addr):
 
             print(f"{addr} Receiving chunk {chunk_index} of {size} bytes")
             # Signal that the peer is ready to download the chunk
-            conn.sendall(b"PEER_READY")
+            conn.sendall(b"READY")
 
             # Attempt to receive chunk
             chunk_data = receive_bytes_from(conn, size)
@@ -110,6 +89,22 @@ def handle_client(conn, addr):
     finally:
         conn.close()
 
+def register_with_tracker():
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect(('127.0.0.1', 6000))
+
+            data = {
+                "type": "REGISTER_PEER",
+                "ip": "127.0.0.1",
+                "port": PORT
+            }
+
+            send_json(s, data)
+            print(f"Registered peer with tracker: {PORT}")
+
+    except Exception as e:
+        print(f"Failed to register peer with tracker: {e}")
 
 def init_peer():
     # Initialize socket

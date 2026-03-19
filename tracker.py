@@ -1,38 +1,11 @@
 import socket
-import json
-import struct
+from network_utils import send_json, receive_json_from
 
 HOST = '0.0.0.0'
 PORT = 6000
 
-# chunk info storage
-tracker_db = {}
-
-
-def receive_bytes_from(sock, size):
-    data = b''
-    while len(data) < size:
-        packet = sock.recv(size - len(data))
-        if not packet:
-            return None
-        data += packet
-    return data
-
-def receive_json_from(sock):
-    raw_len = receive_bytes_from(sock, 4)
-    if not raw_len:
-        return None
-
-    msg_len = struct.unpack('!I', raw_len)[0]
-    data = receive_bytes_from(sock, msg_len)
-    return json.loads(data.decode('utf-8'))
-
-
-def send_json(sock, data):
-    encoded = json.dumps(data).encode('utf-8')
-    sock.sendall(struct.pack('!I', len(encoded)))
-    sock.sendall(encoded)
-
+tracker_database = {} # chunk info storage
+peers = set() # list of peers
 
 def handle_client(conn, addr):
     try:
@@ -47,7 +20,7 @@ def handle_client(conn, addr):
             total_chunks = request["total_chunks"]
             locations = request["locations"]
 
-            tracker_db[file_name] = {
+            tracker_database[file_name] = {
                 "total_chunks": total_chunks,
                 "locations": locations
             }
@@ -60,10 +33,10 @@ def handle_client(conn, addr):
         elif msg_type == "GET_FILE":
             file_name = request["file_name"]
 
-            if file_name in tracker_db:
+            if file_name in tracker_database:
                 response = {
                     "status": "OK",
-                    "data": tracker_db[file_name]
+                    "data": tracker_database[file_name]
                 }
             else:
                 response = {
@@ -72,6 +45,23 @@ def handle_client(conn, addr):
                 }
 
             send_json(conn, response)
+
+        elif msg_type == "REGISTER_PEER":
+            ip = request["ip"]
+            port = request["port"]
+
+            peers.add((ip, port))
+
+            print(f"Peer registered: {ip}:{port}")
+            send_json(conn, {"status": "OK"})
+
+        elif msg_type == "GET_PEERS":
+            peer_list = [{"ip": ip, "port": port} for (ip, port) in peers]
+
+            send_json(conn, {
+                "status": "OK",
+                "peers": peer_list
+            })
 
     except Exception as e:
         print(f"Error handling client {addr}: {e}")

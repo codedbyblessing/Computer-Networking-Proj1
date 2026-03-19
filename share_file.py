@@ -1,26 +1,11 @@
 import socket
-import json
 import os
-import struct
 import sys
+from network_utils import send_json, receive_msg
 
 CHUNK_SIZE = 1024 * 1024
 PEERS = [('127.0.0.1', 5001), ('127.0.0.1', 5002)]
 TRACKER_ADDR = ('127.0.0.1', 6000)
-BUFFER_SIZE = 1024  # for small messages like READY/STORED
-
-
-# Sends JSON + length to the specified socket
-def send_json(sock: socket.socket, data: dict):
-    encoded = json.dumps(data).encode('utf-8')
-    sock.sendall(struct.pack('!I', len(encoded)))
-    sock.sendall(encoded)
-
-
-# Receives status updates from peers
-def recv_msg(sock: socket.socket) -> str:
-    return sock.recv(BUFFER_SIZE).decode('utf-8')
-
 
 # Create 1 MB chunks from the specified file
 def chunk_file(file_path: str):
@@ -35,7 +20,7 @@ def chunk_file(file_path: str):
 
 
 # Send 1 file chunk to the specified peer. Return the peer IP/port # and chunk size to later store in the tracker
-def send_chunk_to_peer(chunk_index: int, chunk_data: bytes, peer: tuple, file_name: str):
+def send_chunk_to_peer(chunk_index, chunk_data, peer, file_name):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect(peer)
@@ -50,14 +35,14 @@ def send_chunk_to_peer(chunk_index: int, chunk_data: bytes, peer: tuple, file_na
             send_json(s, metadata)
 
             # 2. Wait for READY
-            if recv_msg(s) != "PEER_READY":
+            if receive_msg(s) != "READY":
                 raise Exception("Peer isn't ready")
 
             # 3. Send chunk data
             s.sendall(chunk_data)
 
             # 4. Wait for STORED
-            if recv_msg(s) != "CHUNK_STORED":
+            if receive_msg(s) != "CHUNK_STORED":
                 raise Exception("Chunk wasn't stored")
 
             print(f"Stored chunk {chunk_index} with {peer}")
@@ -69,7 +54,7 @@ def send_chunk_to_peer(chunk_index: int, chunk_data: bytes, peer: tuple, file_na
 
 
 # Register the filename, size, and locations of each chunk with the tracker
-def register_with_tracker(file_name: str, total_chunks: int, chunk_locations: dict):
+def register_with_tracker(file_name, total_chunks, chunk_locations):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect(TRACKER_ADDR)
@@ -86,7 +71,7 @@ def register_with_tracker(file_name: str, total_chunks: int, chunk_locations: di
 
 # Register a new uploaded file. Chunking, sending to peers, and registering chunk info
 # with the tracker.
-def upload_file(file_path: str):
+def upload_file(file_path):
     file_name = os.path.basename(file_path)
     chunk_locations = {}
 
@@ -109,12 +94,9 @@ def upload_file(file_path: str):
         print("Upload client: an error occured in distributing the file chunks.")
 
 
-# ------------------------
-# Command-line Interface
-# ------------------------
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python3 alice.py <file_path_to_share>")
+        print("Usage: python3 alice.py path/to/file.xyz")
         sys.exit(1)
 
     file_path = sys.argv[1]
