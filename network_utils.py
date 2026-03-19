@@ -19,7 +19,12 @@ def receive_json_from(sock):
     # unpack message and return the decoded dict
     message_length = struct.unpack('!I', raw_length)[0]
     data = receive_bytes_from(sock, message_length)
-    return json.loads(data.decode('utf-8'))
+    if not data: #logic, if the data does not exists, a clean way to safely return
+        return None
+    try:
+        return json.loads(data.decode('utf-8'))
+    except Exception:
+        return None
 
 def send_json(sock, data):
     encoded = json.dumps(data).encode('utf-8')

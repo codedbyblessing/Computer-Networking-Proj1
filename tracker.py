@@ -20,9 +20,12 @@ def handle_client(conn, addr):
             total_chunks = request["total_chunks"]
             locations = request["locations"]
 
+            # Normalize key data type to strings, important for consistency  
+            normalized_locations = {str(k): v for k, v in locations.items()}
+
             tracker_database[file_name] = {
                 "total_chunks": total_chunks,
-                "locations": locations
+                "locations": normalized_locations
             }
 
             print(f"Tracker: Registered {file_name}")

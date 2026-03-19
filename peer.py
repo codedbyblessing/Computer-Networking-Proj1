@@ -30,7 +30,7 @@ def handle_client(conn, addr):
             # Get chunk information
             filename = metadata["filename"]
             chunk_index = metadata["chunk_index"]
-            size = metadata["size"]
+            size = metadata.get("size", None)
 
             print(f"{addr} Receiving chunk {chunk_index} of {size} bytes")
             # Signal that the peer is ready to download the chunk
@@ -120,4 +120,5 @@ def init_peer():
 
 
 if __name__ == "__main__":
+    register_with_tracker()
     init_peer()
