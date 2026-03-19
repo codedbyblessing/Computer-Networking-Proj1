@@ -31,7 +31,7 @@ def chunk_file(file_path: str):
 def send_chunk_to_peer(chunk_index, chunk_data, peer, file_name):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect(tuple(peer)) #keeping the data structure consistent
+            s.connect((peer["ip"], peer["port"]))
 
             metadata = {
                 "type": "NEW_CHUNK",
@@ -50,11 +50,12 @@ def send_chunk_to_peer(chunk_index, chunk_data, peer, file_name):
                 raise Exception("Chunk wasn't stored")
 
             print(f"Stored chunk {chunk_index} with {peer}")
-            return {"ip": peer[0], "port": peer[1], "size": len(chunk_data)}
+            return {"ip": peer["ip"], "port": peer["port"], "size": len(chunk_data)}
 
-    except:
+    except Exception as e:
         print(f"Upload client: couldn't send {chunk_index} to {peer}: {e}")
         raise
+    
 # Register file with tracker
 def register_with_tracker(file_name, total_chunks, chunk_locations):
     try:
@@ -68,7 +69,7 @@ def register_with_tracker(file_name, total_chunks, chunk_locations):
             }
             send_json(s, data)
             print(f"Upload client: Successfully registered {file_name}.")
-    except:
+    except Exception as e:
         print(f"Upload client: couldn't register with the tracker: {e}")
 
 #CHUNK upload logic
@@ -87,7 +88,7 @@ def upload_file(file_path):
         target_peer = peers[chunk_index % len(peers)]
         try:
             info = send_chunk_to_peer(chunk_index, chunk_data, target_peer, file_name)
-            chunk_locations[str(chunk_index)] = info   # ✅ FIX: string key
+            chunk_locations[str(chunk_index)] = info
         except Exception:
             success = False
             break
