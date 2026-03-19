@@ -1,9 +1,10 @@
+#small scale P2P (peer to peer) tracker
 import socket
 from network_utils import send_json, receive_json_from
 
 HOST = '0.0.0.0'
 PORT = 6000
-
+#Storing the metadata from the files being shared.
 tracker_database = {} # chunk info storage
 peers = set() # list of peers
 
@@ -49,6 +50,7 @@ def handle_client(conn, addr):
 
             send_json(conn, response)
 
+        #This is the case where we register a new peer
         elif msg_type == "REGISTER_PEER":
             ip = request["ip"]
             port = request["port"]
@@ -57,7 +59,7 @@ def handle_client(conn, addr):
 
             print(f"Peer registered: {ip}:{port}")
             send_json(conn, {"status": "OK"})
-
+        #Get peers retrieves a list of the known peers. 
         elif msg_type == "GET_PEERS":
             peer_list = [{"ip": ip, "port": port} for (ip, port) in peers]
 
@@ -72,7 +74,7 @@ def handle_client(conn, addr):
     finally:
         conn.close()
 
-
+#This tracker mimics the tracker from lecture and lab. 
 def init_tracker():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
         server.bind((HOST, PORT))
@@ -81,6 +83,7 @@ def init_tracker():
         print(f"Tracker running on port {PORT}")
 
         while True:
+            #The trackers will accept a new connection 
             conn, addr = server.accept()
             handle_client(conn, addr)
 
