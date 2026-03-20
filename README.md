@@ -1,5 +1,8 @@
 # Computer-Networking-Proj1
 
+Team Members:
+Young Min (Solomon) Kim yk2772
+
 Upload a file, distribute chunks to peers, and reconstruct the file.
 
 Usage:
