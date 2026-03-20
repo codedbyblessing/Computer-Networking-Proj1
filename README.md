@@ -3,6 +3,7 @@
 Team Members:
 Young Min (Solomon) Kim yk2772
 Blessing Yeboah boy205
+Nikhil Talwalkar nst7766
 
 Upload a file, distribute chunks to peers, and reconstruct the file.
 
